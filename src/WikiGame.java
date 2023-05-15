@@ -23,6 +23,8 @@ public class WikiGame implements ActionListener {
     private JScrollPane scrollPane1;
     private JScrollPane scrollPane2;
     private int maxDepth;
+    String startLink;
+    String endLink;
     private ArrayList<String> path = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -33,16 +35,7 @@ public class WikiGame implements ActionListener {
 
     public WikiGame() {
         SwingControlDemo();
-        String startLink = "https://en.wikipedia.org/wiki/Car";  // beginning link, where the program will start
-        String endLink = "https://en.wikipedia.org/wiki/Truck";    // ending link, where the program is trying to get to
-        maxDepth = 1;           // start this at 1 or 2, and if you get it going fast, increase
 
-        if (findLink(startLink, endLink, 0)) {
-            System.out.println("found it********************************************************************");
-            path.add(startLink);
-        } else {
-            System.out.println("did not found it********************************************************************");
-        }
 
     }
 
@@ -54,19 +47,19 @@ public class WikiGame implements ActionListener {
         // BASE CASE
         if (endLink.equals(startLink)) {
             System.out.println("found it");
+            return true;
         } else if (depth==maxDepth) {
             System.out.println("cannot find it");
+            return false;
         }
 
         // GENERAL RECURSIVE CASE
         else {
-            readhtml(startLink);
-
+            return readhtml(startLink);
         }
-
-        return false;
     }
-    public void readhtml(String start) {
+    public boolean readhtml(String start) {
+        boolean found = false;
         try {
             System.out.println();
             System.out.print("hello \n");
@@ -74,21 +67,25 @@ public class WikiGame implements ActionListener {
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(url.openStream())
             );
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println("og: " + line);
 
-                if (line.contains("href") && line.contains(tb.getText())) {
-                    System.out.println("og: " + line);
+            String ogline;
+            while ((ogline = reader.readLine()) != null) {
+             //  System.out.println("og: " + ogline);
+
+                while (ogline.contains("href")) {
+                    String line = ogline;
+                    System.out.println("line: " + line);
 
                     int index = line.indexOf("href");
                     line = line.substring(index + 6);
-                    if (line.contains("http")) {
-                        index = line.indexOf("http");
+                    int end = ogline.length();
+                    if (line.contains("/wiki/")) {
+                        index = line.indexOf("/wiki/");
+                       // System.out.println(index);
                         line = line.substring(index);
                         int endD = line.indexOf("\"");
                         int endS = line.indexOf("\'");
-                        int end = 0;
+
                         if (endD == -1) {
                             end = endS;
                         }
@@ -103,12 +100,28 @@ public class WikiGame implements ActionListener {
 
                             }
                         }
+                      // System.out.println(end);
+                        line = line.substring(0,end);
+                        System.out.println(line);
+                        line = "https://en.wikipedia.org"+line;
+                        if(line.equals(endLink)){
+                            System.out.println("success");
+                            found = true;
+                            break;
+                        }
+
+
                     }
+                    ogline = ogline.substring(end);
+                }
+                if(found == true){
+                    break;
                 }
             }
         }catch (Exception ex) {
             System.out.println(ex);
         }
+        return found;
     }
 
   //  class Wikigame implements ActionListener {
@@ -226,14 +239,20 @@ public class WikiGame implements ActionListener {
                 String command = e.getActionCommand();
 
                 if (command.equals("OK")) {
-                    statusLabel.setText("Ok Button clicked.\n");
 
+                    startLink = ta.getText();//"https://en.wikipedia.org/wiki/Casey_Larson";  // beginning link, where the program will start
+                    endLink = tb.getText();//"https://en.wikipedia.org/wiki/Chicago";    // ending link, where the program is trying to get to
+                    maxDepth = 1;           // start this at 1 or 2, and if you get it going fast, increase
 
+                    if (findLink(startLink, endLink, 0)) {
+                        System.out.println("found it********************************************************************");
+                        path.add(startLink);
+                        statusLabel.setText("Success");
+                    } else {
+                        System.out.println("did not found it********************************************************************");
+                        statusLabel.setText("Did not find it");
+                    }
 
-                } else if (command.equals("Submit")) {
-                    statusLabel.setText("Submit Button clicked.\n");
-                } else {
-                    statusLabel.setText("Cancel Button clicked.");
                 }
             }
         }
